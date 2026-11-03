@@ -3,14 +3,14 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main # Change to master if your default branch is named master
+      - main 
 
 permissions:
   contents: write
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # 1. Fixes the Ubuntu 26 migration warning
     steps:
       - name: Checkout repository 🛎️
         uses: actions/checkout@v4
@@ -18,16 +18,16 @@ jobs:
       - name: Install Node.js & dependencies 🔧
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm' # or 'pnpm' / 'yarn' if you use them
+          node-version: 22 # 2. Upgrades Node to clear the deprecation warning
+          # removed the cache: 'npm' line to fix the missing lock file error
 
       - name: Build project 🚀
         run: |
           npm install
-          npm run build # Generates the 'dist' folder
+          npm run build 
 
       - name: Deploy to GitHub Pages 🚀
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: dist # The folder the action should deploy
-          branch: gh-pages # The branch the action deploys to
+          folder: dist 
+          branch: gh-pages 
