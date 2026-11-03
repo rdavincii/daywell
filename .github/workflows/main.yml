@@ -1,0 +1,33 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main # Change to master if your default branch is named master
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository 🛎️
+        uses: actions/checkout@v4
+
+      - name: Install Node.js & dependencies 🔧
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm' # or 'pnpm' / 'yarn' if you use them
+
+      - name: Build project 🚀
+        run: |
+          npm install
+          npm run build # Generates the 'dist' folder
+
+      - name: Deploy to GitHub Pages 🚀
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist # The folder the action should deploy
+          branch: gh-pages # The branch the action deploys to
