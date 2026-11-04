@@ -3,33 +3,31 @@ name: Build and Deploy
 on:
   push:
     branches:
-      - main 
+      - main
 
 permissions:
   contents: write
 
 jobs:
   deploy:
-    runs-on: ubuntu-24.04 
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository 🛎️
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Install Node.js & dependencies 🔧
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
-      - name: Build project 🚀
-        # ⚠️ Replace 'your-subfolder-name' with the exact name of your subfolder
-        working-directory: ./your-subfolder-name 
+      - name: Install and build
         run: |
-          npm install
-          npm run build 
+          npm ci
+          npm run build
 
-      - name: Deploy to GitHub Pages 🚀
+      - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          # ⚠️ Ensure this path points to the dist folder inside your subfolder
-          folder: your-subfolder-name/dist 
+          folder: dist
           branch: gh-pages
