@@ -81,7 +81,7 @@ Daywell works fully offline in the browser. To keep a private copy in the cloud 
 4. Authentication → URL Configuration: set **Site URL** and add your app address (for example `https://rdavincii.github.io/daywell/`) to **Redirect URLs**.
 5. In the app: Settings → Data → paste the project URL and the anon/publishable key, then **Sign in with Google**.
 
-To pre-connect every device, add repository variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (GitHub → Settings → Secrets and variables → Actions → Variables). The anon key is public by design; never use the service-role key here.
+The deployed site is pre-connected through `.env.production` (project URL and anon key; both are public by design, protected by Row Level Security). Never put a service-role key there.
 
 ## Food lookup keys (stored only in your browser)
 
