@@ -21,6 +21,8 @@ import {
 import { dayKey, longDate, fromFormFields, addDays } from './lib/time';
 import { toCSV } from './lib/store';
 import { getKey, setKey } from './lib/keys';
+import { CloudCard } from './CloudCard';
+import type { CloudApi } from './useCloud';
 import { exportBackupJSON, mergeStates } from './lib/sync';
 import { CATEGORIES, MEAL_TYPES } from './lib/types';
 import type { AppState, Category, Settings, WeightGoal } from './lib/types';
@@ -712,6 +714,7 @@ function KeysCard() {
 }
 
 export function SettingsScreen({
+  cloud,
   state,
   persisted,
   onChange,
@@ -719,6 +722,7 @@ export function SettingsScreen({
   onBack,
   onMergeState,
 }: {
+  cloud: CloudApi;
   state: AppState;
   persisted: boolean;
   onChange: (p: Partial<Settings>) => void;
@@ -1037,6 +1041,7 @@ export function SettingsScreen({
         </div>
       )}
 
+      {tab === 'data' && <CloudCard cloud={cloud} />}
       {tab === 'data' && <KeysCard />}
       {tab === 'data' && (
         <div className="card stack">
@@ -1106,10 +1111,10 @@ export function SettingsScreen({
       )}
 
       <div className="sub" style={{ textAlign: 'center', marginTop: 12 }}>
-        <strong>Version 1.7.0</strong>
+        <strong>Version 1.7.1</strong>
         <br />
         <span style={{ fontSize: 12 }}>
-          <em>What's new: meal-photo scan picks a working Gemini model automatically and shows clear errors.</em>
+          <em>What's new: optional Google sign-in (cloud save), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
         </span>
         <br />
         <br />

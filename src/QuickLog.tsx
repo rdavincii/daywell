@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { FOODS, foodByKey, scaleNutrition, suggestFoods } from './lib/foods';
+import { FOODS, convertQty, foodByKey, scaleByUnit, servingGrams, suggestFoods, unitOptions } from './lib/foods';
 import { useFoodSuggestions } from './foodSearch';
 import { formatRM, parseToSen, senToInput } from './lib/money';
 import { parseQuickLog } from './lib/parser';
@@ -28,6 +28,14 @@ type SpeechRec = {
 function getSR(): (new () => SpeechRec) | null {
   const w = window as unknown as Record<string, unknown>;
   return (w.SpeechRecognition || w.webkitSpeechRecognition || null) as (new () => SpeechRec) | null;
+}
+
+function textDraft(text: string, now: number): Draft {
+  return {
+    ...blankDraft(now, text), item: text, expense: null,
+    meal: { eaten: true, foodName: text, servingLabel: '1 serving', quantity: 1, portion: 'regular', kcal: null, proteinG: null, carbsG: null, fatG: null, nutritionSource: 'unknown', confidence: 'none', mealType: 'Lunch' },
+    warnings: ['Not in the food list, so macros are being looked up online. Add a price if you bought it.'],
+  };
 }
 
 function blankDraft(now: number, text = ''): Draft {
@@ -74,8 +82,11 @@ export function QuickLog({ now, tz, onCommit, lang = 'en-MY', suggestions = [], 
     e?.preventDefault();
     const t = draftText.trim();
     if (!t) return;
-    const drafts = parseQuickLog(t, { now, tz, customFoods });
-    setReview({ drafts, key: newId(), source: fromVoice ? 'voice' : 'text', transcript: t, empty: drafts.length === 0 });
+    let drafts = parseQuickLog(t, { now, tz, customFoods });
+    // The parser knows only prices and foods in the table. Anything else (e.g. "buttermilk") still becomes
+    // an entry named what you typed, and the review sheet looks up its macros online.
+    if (!drafts.length) drafts = [textDraft(t, now)];
+    setReview({ drafts, key: newId(), source: fromVoice ? 'voice' : 'text', transcript: t });
   }
 
   function startListening() {
@@ -207,7 +218,7 @@ export function QuickLog({ now, tz, onCommit, lang = 'en-MY', suggestions = [], 
       )}
       {voiceMsg && <div className="notice err" role="alert">{voiceMsg}</div>}
       {scanning && (
-        <ScanSheet now={now} tz={tz} customFoods={customFoods} onClose={() => setScanning(false)}
+        <ScanSheet now={now} tz={tz} customFoods={customFoods} text={draftText.trim()} onClose={() => setScanning(false)}
           onDrafts={(drafts) => { setScanning(false); setReview({ drafts, key: newId(), source: 'manual' }); }} />
       )}
       {shownReview.value && (
@@ -295,6 +306,7 @@ function ReviewSheet({ initial, empty, tz, now, customFoods, closing, onClose, o
 function DraftEditor({ d, tz, customFoods, onChange, onRemove }: { d: Draft; tz: string; customFoods: FoodRef[]; onChange: (d: Draft) => void; onRemove: () => void }) {
   const [amountText, setAmountText] = useState(d.expense && d.expense.amountSen > 0 ? senToInput(d.expense.amountSen) : '');
   const [kcalText, setKcalText] = useState(d.meal?.kcal != null ? String(d.meal.kcal) : '');
+  const [qtyText, setQtyText] = useState(String(d.meal?.quantity ?? 1));
   const when = toFormFields(d.ts, tz);
 
   function setAmount(v: string) {
@@ -302,14 +314,26 @@ function DraftEditor({ d, tz, customFoods, onChange, onRemove }: { d: Draft; tz:
     const sen = parseToSen(v);
     onChange({ ...d, expense: d.expense ? { ...d.expense, amountSen: sen ?? 0 } : d.expense });
   }
-  function rescale(portion: Portion, quantity: number) {
+  const unit = d.meal?.unit ?? 'serving';
+  const baseFood = d.meal?.baseKey ? foodByKey(d.meal.baseKey, customFoods) : undefined;
+  function rescale(portion: Portion, quantity: number, u = unit) {
     if (!d.meal) return;
-    const food = d.meal.baseKey ? foodByKey(d.meal.baseKey, customFoods) : undefined;
-    if (food) {
-      const n = scaleNutrition(food, quantity, portion);
+    if (baseFood) {
+      const n = scaleByUnit(baseFood, quantity, u, portion);
       setKcalText(String(n.kcal));
-      onChange({ ...d, meal: { ...d.meal, portion, quantity, kcal: n.kcal, proteinG: n.proteinG, carbsG: n.carbsG, fatG: n.fatG } });
-    } else onChange({ ...d, meal: { ...d.meal, portion, quantity } });
+      onChange({ ...d, meal: { ...d.meal, portion, quantity, unit: u, kcal: n.kcal, proteinG: n.proteinG, carbsG: n.carbsG, fatG: n.fatG } });
+    } else onChange({ ...d, meal: { ...d.meal, portion, quantity, unit: u } });
+  }
+  function changeUnit(u: string) {
+    if (!d.meal || !baseFood) return;
+    const q = convertQty(baseFood, d.meal.quantity, unit, u);
+    setQtyText(String(q));
+    rescale(d.meal.portion, q, u);
+  }
+  function typeQty(v: string) {
+    setQtyText(v); // keep what was typed (so "0." and "0.5" work); only a valid number rescales
+    const q = parseFloat(v);
+    if (q > 0 && q <= (unit === 'serving' || unit === 'piece' ? 50 : 5000)) rescale(d.meal!.portion, q);
   }
   function setKcal(v: string) {
     setKcalText(v);
@@ -326,9 +350,12 @@ function DraftEditor({ d, tz, customFoods, onChange, onRemove }: { d: Draft; tz:
   }
 
   function applyFood(f: FoodRef) {
-    const qty = d.meal?.quantity || 1;
+    const per100 = !!f.source && servingGrams(f) === 100; // database foods: start at 100 g
+    const qty = per100 ? 100 : d.meal?.quantity || 1;
+    const u = per100 ? 'g' : 'serving';
     const portion = d.meal?.portion || 'regular';
-    const n = scaleNutrition(f, qty, portion);
+    const n = scaleByUnit(f, qty, u, portion);
+    setQtyText(String(qty));
     setKcalText(String(n.kcal));
     onChange({
       ...d,
@@ -340,14 +367,15 @@ function DraftEditor({ d, tz, customFoods, onChange, onRemove }: { d: Draft; tz:
         foodName: f.name,
         servingLabel: f.serving,
         quantity: qty,
+        unit: u,
         portion,
         kcal: n.kcal,
         proteinG: n.proteinG,
         carbsG: n.carbsG,
         fatG: n.fatG,
         baseKey: f.key,
-        nutritionSource: f.source === 'web' ? 'web' : 'reference-estimate',
-        confidence: f.source === 'web' ? 'medium' : 'high',
+        nutritionSource: f.source ?? 'reference-estimate',
+        confidence: f.source === 'ai' ? 'low' : f.source === 'web' ? 'medium' : 'high',
         note: f.note ?? `Approximate: typically ${f.kcalLow}-${f.kcalHigh} kcal per serving.`
       } as Draft['meal']
     });
@@ -437,14 +465,21 @@ function DraftEditor({ d, tz, customFoods, onChange, onRemove }: { d: Draft; tz:
                   <input className="input" inputMode="numeric" value={kcalText} onChange={(e) => setKcal(e.target.value)} placeholder="Unknown" />
                 </Field>
                 <Field label="Quantity">
-                  <input className="input" inputMode="decimal" value={d.meal.quantity} onChange={(e) => { const q = parseFloat(e.target.value); if (q > 0 && q <= 20) rescale(d.meal!.portion, q); }} />
+                  <input className="input" inputMode="decimal" aria-label="Quantity" value={qtyText} onChange={(e) => typeQty(e.target.value)} />
                 </Field>
-                <Field label="Portion">
-                  <Segmented label="Portion" value={d.meal.portion} options={['small', 'regular', 'large'] as const} onChange={(p) => rescale(p, d.meal!.quantity)} />
+                <Field label="Unit">
+                  <select className="input" aria-label="Unit" value={unit} onChange={(e) => changeUnit(e.target.value)}>
+                    {(baseFood ? unitOptions(baseFood) : [{ id: 'serving', label: 'serving' }]).map((u) => <option key={u.id} value={u.id}>{u.label}</option>)}
+                  </select>
                 </Field>
+                {unit === 'serving' && (
+                  <Field label="Portion">
+                    <Segmented label="Portion" value={d.meal.portion} options={['small', 'regular', 'large'] as const} onChange={(p) => rescale(p, d.meal!.quantity)} />
+                  </Field>
+                )}
               </div>
               <div className="sub">
-                {d.meal.kcal === null ? 'No calorie data for this food. Enter calories or leave blank.' : <>Estimate for {d.meal.servingLabel}{d.meal.baseKey ? ' (approximate, not verified)' : ''}. {d.meal.note}</>}
+                {d.meal.kcal === null ? 'No calorie data for this food. Enter calories or leave blank.' : <>Estimate for {unit === 'serving' ? d.meal.servingLabel : `${d.meal.quantity} ${unit}`}{d.meal.baseKey ? ' (approximate, not verified)' : ''}. {d.meal.note}</>}
                 {d.meal.proteinG !== null && <> Protein {d.meal.proteinG} g · Carbs {d.meal.carbsG} g · Fat {d.meal.fatG} g.</>}
               </div>
             </div>

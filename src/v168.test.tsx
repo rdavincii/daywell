@@ -114,7 +114,7 @@ describe('review editor auto-finds macros online (mocked fetch)', () => {
     await u.type(screen.getByPlaceholderText(/Nasi lemak/), 'Munchy oat crackers');
     await u.click(screen.getByRole('button', { name: /I ate this/ }));
     await waitFor(() => expect(screen.getByLabelText(/Calories/)).toHaveValue('450'), { timeout: 3000 });
-    expect(fetchMock).toHaveBeenCalledTimes(2); // one search = Open Food Facts + USDA
+    expect(fetchMock).toHaveBeenCalledTimes(3); // one search = Open Food Facts + OFF Malaysia + USDA
     expect(screen.getByText(/Protein 9 g/)).toBeInTheDocument();
     vi.unstubAllGlobals();
   }, 8000);

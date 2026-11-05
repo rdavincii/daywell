@@ -1,5 +1,6 @@
 import { rememberFood, similarity } from './foods';
 import { getKey } from './keys';
+import { estimateFood } from './vision';
 import type { FoodRef } from './types';
 
 // Online macro lookup: Open Food Facts (packaged products, barcodes) + USDA FoodData Central (generic and US branded foods).
@@ -122,13 +123,20 @@ const cache = new Map<string, FoodRef[]>();
 export async function searchWebFoods(query: string, signal?: AbortSignal): Promise<FoodRef[]> {
   const q = query.trim().toLowerCase();
   if (cache.has(q)) return cache.get(q)!;
-  const [off, fdc] = await Promise.allSettled([
-    getJson('https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=12&fields=code,product_name,brands,nutriments&search_terms=' + encodeURIComponent(q), signal).then((d) => mapOffProducts(d, q)),
+  const offUrl = 'https://world.openfoodfacts.org/cgi/search.pl?search_simple=1&action=process&json=1&page_size=12&fields=code,product_name,brands,nutriments&search_terms=' + encodeURIComponent(q);
+  const [off, my, fdc] = await Promise.allSettled([
+    getJson(offUrl, signal).then((d) => mapOffProducts(d, q)),
+    // Malaysian products first-class: same search limited to products sold in Malaysia
+    getJson(offUrl + '&tagtype_0=countries&tag_contains_0=contains&tag_0=malaysia', signal).then((d) => mapOffProducts(d, q)),
     getJson(fdcUrl(q, 'Foundation,SR%20Legacy,Branded'), signal).then((d) => mapFdcFoods(d, q)),
   ]);
   if (off.status === 'rejected' && fdc.status === 'rejected') throw off.reason;
-  // Generic USDA foods first (they are per 100 g of the plain food), then packaged products.
-  const foods = [...(fdc.status === 'fulfilled' ? fdc.value : []), ...(off.status === 'fulfilled' ? off.value : [])].slice(0, 6);
+  const ok = <T,>(r: PromiseSettledResult<T[]>) => (r.status === 'fulfilled' ? r.value : []);
+  // Generic USDA foods first (plain food per 100 g), then Malaysian packaged products, then the rest; no duplicates.
+  const seen = new Set<string>();
+  let foods = [...ok(fdc), ...ok(my), ...ok(off)].filter((f) => !seen.has(f.key) && seen.add(f.key)).slice(0, 6);
+  // shortcut: AI fallback only runs with the user's Gemini key; without it a miss stays a miss.
+  if (!foods.length) { try { const e = await estimateFood(q, signal); if (e) foods = [e]; } catch { /* keep the miss */ } }
   foods.forEach(rememberFood);
   cache.set(q, foods);
   return foods;

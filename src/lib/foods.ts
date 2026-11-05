@@ -126,6 +126,57 @@ export const FOODS: FoodRef[] = [
   { key: '100-plus', name: '100 Plus Isotonic Drink', aliases: ['100 plus', '100plus', 'isotonic'], serving: '1 can (325ml)', kcal: 88, proteinG: 0, carbsG: 22, fatG: 0, kcalLow: 75, kcalHigh: 100, drink: true },
   { key: 'coke-zero', name: 'Coca-Cola Zero Sugar', aliases: ['coke zero', 'diet coke', 'pepsi black'], serving: '1 can (320ml)', kcal: 1, proteinG: 0, carbsG: 0, fatG: 0, kcalLow: 0, kcalHigh: 2, drink: true },
   { key: 'water', name: 'Plain water', aliases: ['mineral water', 'air kosong', 'plain water', 'water', 'air suam'], serving: '1 glass or bottle', kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, kcalLow: 0, kcalHigh: 0, drink: true },
+  // --- More Malaysian and everyday foods (typical values, ranges show the spread) ---
+  { key: 'ayam-butter', name: 'Ayam butter (buttermilk chicken)', aliases: ['buttermilk chicken', 'ayam butter', 'ayam butter milk', 'butter milk chicken', 'chicken buttermilk', 'ayam buttermilk', 'butter chicken malaysian'], serving: '1 portion with creamy butter-cereal sauce', kcal: 380, proteinG: 24, carbsG: 18, fatG: 24, kcalLow: 300, kcalHigh: 480, servingG: 150 },
+  { key: 'nasi-ayam-butter', name: 'Nasi ayam butter (buttermilk chicken rice)', aliases: ['nasi ayam butter', 'nasi buttermilk', 'nasi butter milk', 'nasi ayam buttermilk', 'buttermilk chicken rice', 'nasi ayam butter milk'], serving: '1 plate with rice and buttermilk chicken', kcal: 780, proteinG: 32, carbsG: 85, fatG: 34, kcalLow: 650, kcalHigh: 950 },
+  { key: 'buttermilk-drink', name: 'Buttermilk (dairy drink)', aliases: ['buttermilk drink', 'cultured buttermilk'], serving: '1 cup', kcal: 98, proteinG: 8, carbsG: 12, fatG: 2.2, kcalLow: 80, kcalHigh: 120, servingG: 245, drink: true },
+  { key: 'nasi-lemak-rendang', name: 'Nasi lemak rendang', aliases: ['nasi lemak rendang', 'nasi lemak daging'], serving: '1 plate with beef rendang', kcal: 850, proteinG: 30, carbsG: 82, fatG: 44, kcalLow: 700, kcalHigh: 1050 },
+  { key: 'nasi-campur', name: 'Nasi campur (mixed rice)', aliases: ['nasi campur', 'economy rice', 'mixed rice', 'nasi kantin', 'cai fan'], serving: '1 plate with rice, 1 meat and 2 vegetables', kcal: 650, proteinG: 28, carbsG: 78, fatG: 22, kcalLow: 500, kcalHigh: 900 },
+  { key: 'claypot-rice', name: 'Claypot chicken rice', aliases: ['claypot rice', 'claypot chicken rice', 'nasi periuk tanah'], serving: '1 pot', kcal: 700, proteinG: 30, carbsG: 90, fatG: 22, kcalLow: 580, kcalHigh: 850 },
+  { key: 'mee-kari', name: 'Mee kari (curry mee)', aliases: ['mee kari', 'curry mee', 'kari mee'], serving: '1 bowl with chicken, tofu puffs and cockles', kcal: 560, proteinG: 22, carbsG: 62, fatG: 25, kcalLow: 450, kcalHigh: 720 },
+  { key: 'mee-soto', name: 'Mee soto', aliases: ['mee soto', 'soto mee'], serving: '1 bowl', kcal: 380, proteinG: 20, carbsG: 48, fatG: 11, kcalLow: 300, kcalHigh: 480 },
+  { key: 'lontong', name: 'Lontong with kuah lodeh', aliases: ['lontong', 'nasi himpit', 'kuah lodeh'], serving: '1 bowl', kcal: 420, proteinG: 12, carbsG: 55, fatG: 17, kcalLow: 330, kcalHigh: 520 },
+  { key: 'laksam', name: 'Laksam', aliases: ['laksam'], serving: '1 plate with fish gravy', kcal: 480, proteinG: 18, carbsG: 70, fatG: 14, kcalLow: 380, kcalHigh: 600 },
+  { key: 'ketupat', name: 'Ketupat', aliases: ['ketupat', 'nasi impit'], serving: '1 piece', kcal: 190, proteinG: 3.5, carbsG: 42, fatG: 0.5, kcalLow: 160, kcalHigh: 230, servingG: 150 },
+  { key: 'lemang', name: 'Lemang', aliases: ['lemang'], serving: '1 slice', kcal: 210, proteinG: 3.5, carbsG: 38, fatG: 5, kcalLow: 170, kcalHigh: 260, servingG: 100 },
+  { key: 'pulut-kuning', name: 'Pulut kuning', aliases: ['pulut kuning', 'yellow glutinous rice'], serving: '1 serving', kcal: 330, proteinG: 6, carbsG: 62, fatG: 7, kcalLow: 270, kcalHigh: 400, servingG: 150 },
+  { key: 'ayam-masak-merah', name: 'Ayam masak merah', aliases: ['ayam masak merah', 'masak merah'], serving: '1 piece chicken with sauce', kcal: 280, proteinG: 24, carbsG: 10, fatG: 16, kcalLow: 220, kcalHigh: 360 },
+  { key: 'ayam-percik', name: 'Ayam percik', aliases: ['ayam percik', 'percik chicken'], serving: '1 piece grilled with coconut sauce', kcal: 300, proteinG: 26, carbsG: 8, fatG: 19, kcalLow: 240, kcalHigh: 380 },
+  { key: 'kari-ayam', name: 'Chicken curry (kari ayam)', aliases: ['kari ayam', 'chicken curry', 'gulai ayam'], serving: '1 serving with potato', kcal: 290, proteinG: 22, carbsG: 12, fatG: 17, kcalLow: 220, kcalHigh: 380 },
+  { key: 'dalca', name: 'Dalca', aliases: ['dalca', 'dhal', 'dal'], serving: '1 small bowl', kcal: 150, proteinG: 8, carbsG: 20, fatG: 4, kcalLow: 110, kcalHigh: 200 },
+  { key: 'daging-masak-hitam', name: 'Daging masak hitam', aliases: ['daging masak hitam', 'black pepper beef', 'beef masak hitam'], serving: '1 serving', kcal: 320, proteinG: 26, carbsG: 12, fatG: 18, kcalLow: 250, kcalHigh: 420 },
+  { key: 'sambal-sotong', name: 'Sambal sotong', aliases: ['sambal sotong', 'sotong sambal', 'sambal squid'], serving: '1 serving', kcal: 190, proteinG: 18, carbsG: 9, fatG: 9, kcalLow: 150, kcalHigh: 250 },
+  { key: 'sambal-udang', name: 'Sambal udang', aliases: ['sambal udang', 'sambal prawn', 'udang sambal'], serving: '1 serving', kcal: 200, proteinG: 20, carbsG: 8, fatG: 10, kcalLow: 160, kcalHigh: 260 },
+  { key: 'sotong-goreng-tepung', name: 'Sotong goreng tepung', aliases: ['sotong goreng tepung', 'calamari', 'fried squid'], serving: '1 serving', kcal: 350, proteinG: 18, carbsG: 28, fatG: 18, kcalLow: 280, kcalHigh: 450 },
+  { key: 'ikan-goreng', name: 'Ikan goreng', aliases: ['ikan goreng', 'fried fish'], serving: '1 medium fish', kcal: 240, proteinG: 26, carbsG: 3, fatG: 14, kcalLow: 180, kcalHigh: 320 },
+  { key: 'telur-dadar', name: 'Telur dadar', aliases: ['telur dadar', 'omelette', 'omelet', 'omelet telur'], serving: '1 omelette (2 eggs)', kcal: 190, proteinG: 12, carbsG: 2, fatG: 15, kcalLow: 150, kcalHigh: 240, servingG: 120 },
+  { key: 'tempe-goreng', name: 'Tempe goreng', aliases: ['tempe goreng', 'tempeh', 'fried tempeh'], serving: '3 pieces', kcal: 210, proteinG: 13, carbsG: 11, fatG: 13, kcalLow: 160, kcalHigh: 270 },
+  { key: 'tauhu-goreng', name: 'Tauhu goreng', aliases: ['tauhu goreng', 'tofu goreng', 'fried tofu'], serving: '3 pieces', kcal: 160, proteinG: 9, carbsG: 4, fatG: 12, kcalLow: 120, kcalHigh: 220 },
+  { key: 'kangkung-belacan', name: 'Kangkung goreng belacan', aliases: ['kangkung belacan', 'kangkung goreng', 'sayur kangkung'], serving: '1 serving', kcal: 110, proteinG: 4, carbsG: 8, fatG: 7, kcalLow: 80, kcalHigh: 160 },
+  { key: 'kaya-toast', name: 'Kaya toast with butter', aliases: ['kaya toast', 'roti bakar kaya', 'roti kaya'], serving: '2 slices', kcal: 280, proteinG: 6, carbsG: 38, fatG: 12, kcalLow: 220, kcalHigh: 360 },
+  { key: 'roti-john', name: 'Roti john', aliases: ['roti john'], serving: '1 piece', kcal: 560, proteinG: 24, carbsG: 48, fatG: 30, kcalLow: 450, kcalHigh: 700 },
+  { key: 'yong-tau-foo', name: 'Yong tau foo (soup)', aliases: ['yong tau foo', 'yong tau fu', 'ytf'], serving: '1 bowl, about 6 pieces with noodles', kcal: 350, proteinG: 22, carbsG: 38, fatG: 12, kcalLow: 260, kcalHigh: 480 },
+  { key: 'har-gow', name: 'Har gow (prawn dumpling)', aliases: ['har gow', 'ha kau', 'prawn dumpling'], serving: '3 pieces', kcal: 130, proteinG: 8, carbsG: 16, fatG: 4, kcalLow: 100, kcalHigh: 170 },
+  { key: 'char-siu-bao', name: 'Char siu bao', aliases: ['char siu bao', 'char siew pau', 'bbq pork bun'], serving: '1 piece', kcal: 200, proteinG: 8, carbsG: 32, fatG: 5, kcalLow: 160, kcalHigh: 250 },
+  { key: 'lo-mai-gai', name: 'Lo mai gai', aliases: ['lo mai gai', 'glutinous rice chicken'], serving: '1 piece', kcal: 330, proteinG: 12, carbsG: 50, fatG: 9, kcalLow: 260, kcalHigh: 420 },
+  { key: 'kuih-lapis', name: 'Kuih lapis', aliases: ['kuih lapis', 'lapis'], serving: '1 piece', kcal: 120, proteinG: 1.5, carbsG: 24, fatG: 2.5, kcalLow: 90, kcalHigh: 160, servingG: 60 },
+  { key: 'onde-onde', name: 'Onde-onde', aliases: ['onde onde', 'onde-onde', 'buah melaka'], serving: '3 pieces', kcal: 150, proteinG: 2, carbsG: 28, fatG: 3.5, kcalLow: 110, kcalHigh: 200, pieceG: 20 },
+  { key: 'kuih-seri-muka', name: 'Kuih seri muka', aliases: ['seri muka', 'kuih seri muka'], serving: '1 piece', kcal: 170, proteinG: 2.5, carbsG: 30, fatG: 4.5, kcalLow: 130, kcalHigh: 220, servingG: 80 },
+  { key: 'cucur-udang', name: 'Cucur udang', aliases: ['cucur udang', 'cucur'], serving: '1 piece', kcal: 130, proteinG: 4, carbsG: 14, fatG: 6, kcalLow: 100, kcalHigh: 180 },
+  { key: 'lepat-pisang', name: 'Lepat pisang', aliases: ['lepat pisang', 'lepat'], serving: '1 piece', kcal: 140, proteinG: 1.5, carbsG: 29, fatG: 2.5, kcalLow: 110, kcalHigh: 180 },
+  { key: 'bubur-kacang', name: 'Bubur kacang hijau', aliases: ['bubur kacang', 'bubur kacang hijau', 'green bean porridge'], serving: '1 bowl', kcal: 260, proteinG: 9, carbsG: 48, fatG: 4, kcalLow: 200, kcalHigh: 330 },
+  { key: 'bubur-lambuk', name: 'Bubur lambuk', aliases: ['bubur lambuk'], serving: '1 bowl', kcal: 250, proteinG: 11, carbsG: 34, fatG: 8, kcalLow: 190, kcalHigh: 330 },
+  { key: 'air-kelapa', name: 'Air kelapa (coconut water)', aliases: ['air kelapa', 'coconut water', 'kelapa muda'], serving: '1 glass', kcal: 60, proteinG: 1, carbsG: 14, fatG: 0.5, kcalLow: 45, kcalHigh: 80, servingG: 300, drink: true },
+  { key: 'air-tebu', name: 'Air tebu (sugarcane juice)', aliases: ['air tebu', 'sugarcane juice'], serving: '1 glass', kcal: 130, proteinG: 0, carbsG: 33, fatG: 0, kcalLow: 100, kcalHigh: 180, servingG: 300, drink: true },
+  { key: 'teh-halia', name: 'Teh halia', aliases: ['teh halia', 'ginger tea'], serving: '1 cup with sugar and milk', kcal: 120, proteinG: 2, carbsG: 22, fatG: 3, kcalLow: 80, kcalHigh: 170, drink: true },
+  { key: 'milo-panas', name: 'Milo panas', aliases: ['milo panas', 'hot milo', 'milo'], serving: '1 cup', kcal: 160, proteinG: 4, carbsG: 28, fatG: 3.5, kcalLow: 120, kcalHigh: 220, drink: true },
+  { key: 'oatmeal', name: 'Oatmeal', aliases: ['oatmeal', 'oats', 'porridge oats', 'overnight oats'], serving: '1 bowl cooked with water', kcal: 160, proteinG: 6, carbsG: 28, fatG: 3, kcalLow: 130, kcalHigh: 220, servingG: 240 },
+  { key: 'chicken-salad', name: 'Chicken salad', aliases: ['chicken salad', 'salad ayam', 'salad'], serving: '1 bowl with dressing', kcal: 320, proteinG: 28, carbsG: 14, fatG: 17, kcalLow: 220, kcalHigh: 450 },
+  { key: 'spaghetti-bolognese', name: 'Spaghetti bolognese', aliases: ['spaghetti bolognese', 'spaghetti', 'bolognese'], serving: '1 plate', kcal: 640, proteinG: 28, carbsG: 82, fatG: 22, kcalLow: 500, kcalHigh: 800 },
+  { key: 'ramen', name: 'Ramen', aliases: ['ramen', 'tonkotsu ramen'], serving: '1 bowl', kcal: 550, proteinG: 24, carbsG: 68, fatG: 19, kcalLow: 430, kcalHigh: 750 },
+  { key: 'sushi-salmon', name: 'Salmon sushi (nigiri)', aliases: ['salmon sushi', 'sushi', 'nigiri'], serving: '2 pieces', kcal: 90, proteinG: 6, carbsG: 14, fatG: 1.5, kcalLow: 70, kcalHigh: 120, pieceG: 35 },
+  { key: 'mango', name: 'Mango', aliases: ['mango', 'mangga'], serving: '1 cup sliced', kcal: 100, proteinG: 1.4, carbsG: 25, fatG: 0.6, kcalLow: 85, kcalHigh: 120, servingG: 165 },
+  { key: 'pineapple', name: 'Pineapple', aliases: ['pineapple', 'nanas'], serving: '1 cup chunks', kcal: 82, proteinG: 0.9, carbsG: 22, fatG: 0.2, kcalLow: 70, kcalHigh: 95, servingG: 165 },
 ];
 
 export const PORTION_FACTOR: Record<Portion, number> = { small: 0.75, regular: 1, large: 1.35 };
@@ -156,6 +207,55 @@ export interface Nutrition {
   proteinG: number;
   carbsG: number;
   fatG: number;
+}
+
+// Grams in one serving where the serving is a clear measure (eggs, fruit) and the table does not say.
+const GRAMS: Record<string, { servingG: number; pieceG?: number }> = {
+  'boiled-egg': { servingG: 50, pieceG: 50 }, 'fried-egg': { servingG: 46, pieceG: 46 }, 'half-boiled-eggs': { servingG: 100, pieceG: 50 },
+  banana: { servingG: 118, pieceG: 118 }, apple: { servingG: 182, pieceG: 182 }, orange: { servingG: 131, pieceG: 131 },
+};
+
+/** Grams in one serving, or null when we do not know (then only the serving unit is offered). */
+export function servingGrams(f: FoodRef): number | null {
+  if (f.servingG) return f.servingG;
+  if (GRAMS[f.key]) return GRAMS[f.key].servingG;
+  const m = /(\d+(?:\.\d+)?)\s*g\b/i.exec(f.serving);
+  return m ? parseFloat(m[1]) : null;
+}
+
+const OZ = 28.3495;
+
+/** Grams in one of `unit`, or null if the unit does not apply to this food. 'serving' is handled separately. */
+function unitGrams(f: FoodRef, unit: string): number | null {
+  if (unit === 'g') return 1;
+  if (unit === 'oz') return OZ;
+  if (unit === 'piece') return f.pieceG ?? GRAMS[f.key]?.pieceG ?? null;
+  return null;
+}
+
+/** Units you can pick for this food. g and oz need a known serving weight; piece needs a known piece weight. */
+export function unitOptions(f: FoodRef): { id: string; label: string }[] {
+  const o = [{ id: 'serving', label: 'serving' }];
+  if (servingGrams(f)) o.push({ id: 'g', label: 'g' }, { id: 'oz', label: 'oz' });
+  if (servingGrams(f) && unitGrams(f, 'piece')) o.push({ id: 'piece', label: 'piece' });
+  return o;
+}
+
+/** Same amount of food expressed in another unit (30 g -> 0.3 serving of a 100 g serving). */
+export function convertQty(f: FoodRef, qty: number, from: string, to: string): number {
+  const sg = servingGrams(f);
+  if (!sg || from === to) return qty;
+  const g = from === 'serving' ? qty * sg : qty * (unitGrams(f, from) ?? sg);
+  const out = to === 'serving' ? g / sg : g / (unitGrams(f, to) ?? sg);
+  return out >= 100 ? Math.round(out) : Math.round(out * 100) / 100;
+}
+
+/** Macros for `qty` of `unit`. Portion size (small/large) only applies to the serving unit. */
+export function scaleByUnit(food: FoodRef, qty: number, unit: string, portion: Portion): Nutrition {
+  const sg = servingGrams(food);
+  const g = unit === 'serving' ? null : unitGrams(food, unit);
+  if (!sg || g === null) return scaleNutrition(food, qty, portion);
+  return scaleNutrition(food, (qty * g) / sg, 'regular');
 }
 
 export function scaleNutrition(food: FoodRef, quantity: number, portion: Portion): Nutrition {

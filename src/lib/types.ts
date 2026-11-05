@@ -56,7 +56,10 @@ export interface FoodRef {
   kcalHigh: number;
   drink?: boolean;
   note?: string;
-  source?: 'web'; // came from Open Food Facts (per 100 g), not our own table
+  source?: 'web' | 'ai'; // found online (per 100 g / per serving) or AI-estimated, not from our own table
+  servingG?: number; // grams in one `serving`, enables the g unit
+  pieceG?: number; // grams in one piece, enables the piece unit
+  mine?: true; // saved from something you logged (searchable "My foods"), not a recipe
   ingredients?: RecipeIngredient[]; // present when this food is a saved recipe
 }
 
@@ -78,12 +81,13 @@ export interface Meal {
   foodName: string;
   servingLabel: string; // e.g. "1 plate"
   quantity: number;
+  unit?: string; // 'serving' (default) | 'g' | 'oz' | 'piece': what `quantity` counts
   portion: Portion;
   kcal: number | null; // null = no nutrition data yet (never invented)
   proteinG: number | null;
   carbsG: number | null;
   fatG: number | null;
-  nutritionSource: 'reference-estimate' | 'web' | 'manual' | 'unknown';
+  nutritionSource: 'reference-estimate' | 'web' | 'ai' | 'manual' | 'unknown';
   confidence: Confidence;
   note?: string;
   expenseId?: string; // optional link; meals can exist without an expense
@@ -141,6 +145,7 @@ export interface Draft {
     foodName: string;
     servingLabel: string;
     quantity: number;
+    unit?: string;
     portion: Portion;
     kcal: number | null;
     proteinG: number | null;

@@ -10,6 +10,8 @@ import { Icons, Toast } from './ui';
 import { FreshIds, usePresence } from './motion';
 import { QuickLog } from './QuickLog';
 import { RecipesCard } from './Recipes';
+import { useCloud } from './useCloud';
+import { foodsToRemember } from './lib/myFoods';
 
 type Tab = 'home' | 'activity' | 'log' | 'health' | 'finance';
 
@@ -89,11 +91,16 @@ export default function App() {
 
   const today = useMemo(() => dayKey(now, state.settings.timezone), [now, state.settings.timezone]);
   const apply = useCallback((fn: (s: AppState) => AppState) => setState((s) => fn(s)), []);
+  const cloud = useCloud(state, setState);
 
   const handleLogWeight = (kg: number, ts: number) => apply((s) => logWeight(s, kg, ts));
 
   const onCommit = (drafts: Draft[], key: string, meta: { source: InputSource; transcript?: string }) => {
-    apply((s) => commitDrafts(s, drafts, key, meta));
+    apply((s) => {
+      const next = commitDrafts(s, drafts, key, meta);
+      const keep = foodsToRemember(drafts, s.customFoods || []);
+      return keep.length ? { ...next, customFoods: [...(s.customFoods || []), ...keep] } : next;
+    });
     celebrate(450); // sheet exit (240ms) finishes, then Home shows the bars moving and the new row opening
 
     const expenses = drafts.filter((d) => d.expense).length;
@@ -203,6 +210,7 @@ export default function App() {
       {tab === 'finance' && <FinanceScreen state={state} today={today} />}
       {tab === 'settings' && (
         <SettingsScreen
+          cloud={cloud}
           state={state}
           persisted={persisted}
           onChange={(p: Partial<Settings>) => apply((s) => {

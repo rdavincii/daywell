@@ -9,14 +9,15 @@ import { Field, Sheet } from './ui';
 /** Log tab card: saved recipes (log or remove) and a button to build a new one. */
 export function RecipesCard({ customFoods, onSave, onLog }: { customFoods: FoodRef[]; onSave: (foods: FoodRef[]) => void; onLog: (name: string) => void }) {
   const [building, setBuilding] = useState(false);
+  const recipes = customFoods.filter((f) => !f.mine); // "My foods" saved from logging are searchable but are not recipes
   return (
     <div className="card stack" style={{ marginTop: 16 }}>
       <div className="row between">
         <strong>Recipes</strong>
         <button className="btn secondary small" onClick={() => setBuilding(true)}>+ New recipe</button>
       </div>
-      {customFoods.length === 0 && <div className="sub">Combine foods into one meal. Macros are added up for you.</div>}
-      {customFoods.map((f) => (
+      {recipes.length === 0 && <div className="sub">Combine foods into one meal. Macros are added up for you.</div>}
+      {recipes.map((f) => (
         <div key={f.key} className="row between">
           <div>
             <strong>{f.name}</strong> <span className="sub">{f.kcal} kcal</span>

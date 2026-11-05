@@ -91,7 +91,8 @@ describe('parseDetected', () => {
 describe('foodToDraft', () => {
   it('scales by servings and flags a miss', () => {
     const food = { ...offToFood(offBar.product)!, kcal: 100, proteinG: 5, carbsG: 10, fatG: 2 };
-    expect(foodToDraft('x', food, 2, Date.now(), 'Asia/Kuala_Lumpur').meal).toMatchObject({ kcal: 200, nutritionSource: 'web', eaten: true });
+    // per-100 g database foods start at 100 g (a plate has no weight there)
+    expect(foodToDraft('x', food, 2, Date.now(), 'Asia/Kuala_Lumpur').meal).toMatchObject({ kcal: 100, quantity: 100, unit: 'g', nutritionSource: 'web', eaten: true });
     const miss = foodToDraft('mystery', null, 1, Date.now(), 'Asia/Kuala_Lumpur');
     expect(miss.meal?.kcal).toBeNull();
     expect(miss.warnings).toHaveLength(1);

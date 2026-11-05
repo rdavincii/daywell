@@ -63,6 +63,7 @@ export function commitDrafts(
         foodName: d.meal.foodName.trim() || d.item,
         servingLabel: d.meal.servingLabel,
         quantity: d.meal.quantity,
+        unit: d.meal.unit,
         portion: d.meal.portion,
         kcal: d.meal.kcal,
         proteinG: d.meal.proteinG,

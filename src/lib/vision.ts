@@ -1,4 +1,5 @@
 import { getKey } from './keys';
+import type { FoodRef } from './types';
 
 export interface DetectedFood { name: string; servings: number }
 
@@ -85,4 +86,42 @@ export async function detectFoods(base64Jpeg: string, signal?: AbortSignal): Pro
   if (!res.ok) { if (res.status === 404) modelCache = null; throw await googleError(res); }
   const j = await res.json();
   return parseDetected(j?.candidates?.[0]?.content?.parts?.[0]?.text ?? '');
+}
+
+/** Model reply -> food, or null if it is missing numbers or the macros do not add up to the calories (a sign of a made-up answer). */
+export function parseEstimate(text: string, query: string): FoodRef | null {
+  let o: Record<string, unknown>;
+  try { o = JSON.parse(text.replace(/^\s*```(?:json)?|```\s*$/g, '').trim()); } catch { return null; }
+  const n = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : null);
+  const kcal = n(o.kcal), p = n(o.proteinG), c = n(o.carbsG), f = n(o.fatG), g = n(o.servingGrams);
+  if (kcal === null || p === null || c === null || f === null || kcal <= 0 || kcal > 3000) return null;
+  const fromMacros = 4 * p + 4 * c + 9 * f;
+  if (fromMacros < kcal * 0.6 || fromMacros > kcal * 1.5) return null;
+  const k = Math.round(kcal);
+  const name = typeof o.name === 'string' && o.name.trim() ? o.name.trim().slice(0, 80) : query;
+  return {
+    key: 'ai-' + query.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 40), name, aliases: [],
+    serving: typeof o.serving === 'string' && o.serving.trim() ? o.serving.trim().slice(0, 80) : '1 serving',
+    kcal: k, proteinG: Math.round(p * 10) / 10, carbsG: Math.round(c * 10) / 10, fatG: Math.round(f * 10) / 10,
+    kcalLow: Math.round(k * 0.75), kcalHigh: Math.round(k * 1.25), servingG: g && g > 0 && g < 3000 ? Math.round(g) : undefined,
+    note: 'AI estimate of a typical serving (no database had it). Check the numbers and edit if you know better.', source: 'ai',
+  };
+}
+
+/** Last resort when no database has the food: ask Gemini for a typical serving. Needs the user's key. null = no key or no sane answer. */
+export async function estimateFood(query: string, signal?: AbortSignal): Promise<FoodRef | null> {
+  const key = getKey('gemini');
+  if (!key) return null;
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${await modelFor(key, signal)}:generateContent`, {
+    method: 'POST', signal, headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: `Estimate the nutrition of one typical serving of this food as eaten in Malaysia: "${query.slice(0, 80)}". Use realistic values for a standard serving. serving = short description like "1 plate" or "1 piece"; servingGrams = grams in that serving.` }] }],
+      generationConfig: {
+        responseMimeType: 'application/json',
+        responseSchema: { type: 'OBJECT', properties: { name: { type: 'STRING' }, serving: { type: 'STRING' }, servingGrams: { type: 'NUMBER' }, kcal: { type: 'NUMBER' }, proteinG: { type: 'NUMBER' }, carbsG: { type: 'NUMBER' }, fatG: { type: 'NUMBER' } }, required: ['kcal', 'proteinG', 'carbsG', 'fatG'] },
+      },
+    }),
+  });
+  if (!res.ok) throw await googleError(res);
+  return parseEstimate((await res.json())?.candidates?.[0]?.content?.parts?.[0]?.text ?? '', query);
 }

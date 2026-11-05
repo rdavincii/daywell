@@ -8,10 +8,10 @@ import type { Draft, FoodRef } from './lib/types';
 import { Sheet } from './ui';
 
 /** Photo scan: a barcode (looked up online) or a meal photo (foods detected by AI, then looked up). Results open in the normal review sheet. */
-export function ScanSheet({ now, tz, customFoods, onDrafts, onClose }: { now: number; tz: string; customFoods: FoodRef[]; onDrafts: (d: Draft[]) => void; onClose: () => void }) {
+export function ScanSheet({ now, tz, customFoods, text = '', onDrafts, onClose }: { now: number; tz: string; customFoods: FoodRef[]; text?: string; onDrafts: (d: Draft[]) => void; onClose: () => void }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState(/^\d{8,14}$/.test(text.replace(/\s/g, '')) ? text.replace(/\s/g, '') : '');
   const barRef = useRef<HTMLInputElement>(null);
   const mealRef = useRef<HTMLInputElement>(null);
 
@@ -25,6 +25,15 @@ export function ScanSheet({ now, tz, customFoods, onDrafts, onClose }: { now: nu
       setMsg(e instanceof Error && /digits/.test(e.message) ? e.message : "Couldn't reach the food databases. Check your connection and try again.");
     }
     setBusy(null);
+  }
+
+  // What you already typed in the Log box can be looked up by name from here.
+  const name = /^\d{8,14}$/.test(text.replace(/\s/g, '')) ? '' : text;
+  async function byName() {
+    setBusy(`Looking up “${name}”…`); setMsg(null);
+    const f = await resolveFood(name, customFoods).catch(() => null);
+    setBusy(null);
+    onDrafts([foodToDraft(name, f, 1, now, tz)]);
   }
 
   async function barcodePhoto(file?: File) {
@@ -64,6 +73,7 @@ export function ScanSheet({ now, tz, customFoods, onDrafts, onClose }: { now: nu
         <input ref={mealRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { mealPhoto(e.target.files?.[0]); e.target.value = ''; }} />
         <button className="btn" disabled={!!busy} onClick={() => barRef.current?.click()}>Scan a barcode</button>
         <button className="btn" disabled={!!busy} onClick={() => mealRef.current?.click()}>Scan a meal</button>
+        {name && <button className="btn secondary" disabled={!!busy} onClick={byName}>Find macros for “{name}”</button>}
         <div className="row">
           <input className="input" inputMode="numeric" aria-label="Barcode number" placeholder="or type the barcode number" value={code} onChange={(e) => setCode(e.target.value)} />
           <button className="btn secondary small" disabled={!!busy || !code.trim()} onClick={() => byCode(code)}>Look up</button>

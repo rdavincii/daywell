@@ -69,3 +69,20 @@ None today. Static hosting free tiers are enough. AI features, when added, will 
 - `src/Timeline.tsx` activity list and edit sheet
 - `src/Screens.tsx` Home, Health, Finance, Settings
 - `src/*.test.ts(x)` tests
+
+
+## Cloud save (optional, Google sign-in)
+
+Daywell works fully offline in the browser. To keep a private copy in the cloud and use it on several devices:
+
+1. Create a free project at supabase.com.
+2. In the SQL editor, run `supabase/migrations/0003_user_state.sql` (one private row per user, protected by Row Level Security).
+3. Authentication → Providers → **Google**: enable it with a Google OAuth client ID and secret (Google Cloud Console → APIs & Services → Credentials → OAuth client, type Web). Add the callback URL Supabase shows you as an authorized redirect URI in Google.
+4. Authentication → URL Configuration: set **Site URL** and add your app address (for example `https://rdavincii.github.io/daywell/`) to **Redirect URLs**.
+5. In the app: Settings → Data → paste the project URL and the anon/publishable key, then **Sign in with Google**.
+
+To pre-connect every device, add repository variables `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` (GitHub → Settings → Secrets and variables → Actions → Variables). The anon key is public by design; never use the service-role key here.
+
+## Food lookup keys (stored only in your browser)
+
+Settings → Data: a free Google AI (Gemini) key enables meal-photo scan and AI estimates for dishes no database has; a free USDA FoodData Central key avoids the shared rate limit.

@@ -170,7 +170,7 @@ export function EntryRow({
             {m && m.kcal !== null && (
               <span className="chip cal">
                 {m.kcal} kcal
-                {m.nutritionSource === 'reference-estimate' ? ' (est.)' : m.nutritionSource === 'web' ? ' (web)' : ''}
+                {m.nutritionSource === 'reference-estimate' ? ' (est.)' : m.nutritionSource === 'web' ? ' (web)' : m.nutritionSource === 'ai' ? ' (AI est.)' : ''}
               </span>
             )}
             {m && <span className="chip">{m.mealType}</span>}
@@ -549,11 +549,13 @@ export function EditSheet({
               <input className="input" inputMode="decimal" value={fat} onChange={(x) => setFat(x.target.value)} />
             </Field>
             <div className="sub full">
-              {m.servingLabel} × {m.quantity}, {m.portion} portion.{' '}
+              {m.unit && m.unit !== 'serving' ? `${m.quantity} ${m.unit}.` : `${m.servingLabel} × ${m.quantity}, ${m.portion} portion.`}{' '}
               {m.nutritionSource === 'reference-estimate'
                 ? 'Approximate estimate, not verified.'
                 : m.nutritionSource === 'web'
-                ? 'Found online (Open Food Facts), not verified.'
+                ? 'Found online (Open Food Facts or USDA), not verified.'
+                : m.nutritionSource === 'ai'
+                ? 'AI estimate, not verified.'
                 : m.nutritionSource === 'manual'
                 ? 'Entered by you.'
                 : 'No data source.'}{' '}
