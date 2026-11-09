@@ -7,7 +7,7 @@ import type { AppState } from './lib/types';
 export type CloudStatus = 'unconfigured' | 'signed-out' | 'syncing' | 'synced' | 'error';
 export interface CloudApi {
   status: CloudStatus; email: string | null; error: string | null; lastSynced: number | null;
-  signIn: () => Promise<void>; signOut: () => Promise<void>; syncNow: () => Promise<void>;
+  sendLink: (email: string) => Promise<boolean>; signOut: () => Promise<void>; syncNow: () => Promise<void>;
   configure: (c: CloudConfig | null) => string | null; deleteCopy: () => Promise<void>;
 }
 
@@ -54,11 +54,14 @@ export function useCloud(state: AppState, setState: (f: (s: AppState) => AppStat
   return {
     status: !configured ? 'unconfigured' : user ? status : 'signed-out',
     email: user?.email ?? null, error, lastSynced,
-    signIn: async () => {
+    // Passwordless email link: no third-party sign-up needed. The link brings you back here, signed in.
+    sendLink: async (email) => {
       const db = getClient();
-      if (!db) return;
-      const { error: e } = await db.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname } });
-      if (e) { setStatus('error'); setError(msg(e)); }
+      if (!db) return false;
+      const { error: e } = await db.auth.signInWithOtp({ email: email.trim(), options: { emailRedirectTo: location.origin + location.pathname } });
+      if (e) { setStatus('error'); setError(msg(e)); return false; }
+      setError(null);
+      return true;
     },
     signOut: async () => { await getClient()?.auth.signOut(); setUser(null); setStatus('signed-out'); },
     syncNow: () => run(true),

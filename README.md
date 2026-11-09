@@ -71,17 +71,17 @@ None today. Static hosting free tiers are enough. AI features, when added, will 
 - `src/*.test.ts(x)` tests
 
 
-## Cloud save (optional, Google sign-in)
+## Cloud save (optional, email sign-in)
 
-Daywell works fully offline in the browser. To keep a private copy in the cloud and use it on several devices:
+Daywell works fully offline in the browser. To keep a private copy in the cloud and use it on several devices, sign in with your email: Settings → Data → enter your email → open the link we send. No password and no third-party account.
 
-1. Create a free project at supabase.com.
-2. In the SQL editor, run `supabase/migrations/0003_user_state.sql` (one private row per user, protected by Row Level Security).
-3. Authentication → Providers → **Google**: enable it with a Google OAuth client ID and secret (Google Cloud Console → APIs & Services → Credentials → OAuth client, type Web). Add the callback URL Supabase shows you as an authorized redirect URI in Google.
-4. Authentication → URL Configuration: set **Site URL** and add your app address (for example `https://rdavincii.github.io/daywell/`) to **Redirect URLs**.
-5. In the app: Settings → Data → paste the project URL and the anon/publishable key, then **Sign in with Google**.
+One-time setup for the Supabase project in `.env.production` (already pre-connected on the deployed site):
 
-The deployed site is pre-connected through `.env.production` (project URL and anon key; both are public by design, protected by Row Level Security). Never put a service-role key there.
+1. SQL editor: run `supabase/migrations/0003_user_state.sql` (one private row per user, protected by Row Level Security).
+2. Authentication → URL Configuration → **Redirect URLs**: add the address where Daywell is hosted (for example `https://rdavincii.github.io/daywell/`) so the email link brings you back to the app.
+3. Authentication → Providers: **Email** must be enabled (it is by default).
+
+The project URL and anon key in `.env.production` are public by design, protected by Row Level Security. Never put a service-role key there. Supabase's built-in email sender allows only a few emails per hour; that is plenty for sign-ins. Add your own SMTP in Supabase if you ever need more.
 
 ## Food lookup keys (stored only in your browser)
 

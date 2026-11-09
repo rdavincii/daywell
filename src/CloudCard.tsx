@@ -3,19 +3,21 @@ import { cloudConfig } from './lib/cloud';
 import type { CloudApi } from './useCloud';
 import { Field } from './ui';
 
-/** Settings → Data: optional Google sign-in that keeps a private copy of your data in your own Supabase project. */
+/** Settings → Data: optional email sign-in (a link sent to your inbox, no password) that keeps a private copy of your data in your own Supabase project. */
 export function CloudCard({ cloud }: { cloud: CloudApi }) {
   const existing = cloudConfig();
   const [url, setUrl] = useState(existing?.url ?? '');
   const [anon, setAnon] = useState(existing?.anon ?? '');
   const [err, setErr] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
   const ago = cloud.lastSynced ? new Date(cloud.lastSynced).toLocaleTimeString() : null;
 
   return (
     <div className="card stack">
       <span className="label">Save to the cloud (optional)</span>
-      <div className="sub">Sign in with Google to keep a private backup and use Daywell on other devices. Without it, everything stays in this browser.</div>
+      <div className="sub">Sign in with just your email (we send a link, no password) to keep a private backup and use Daywell on other devices. Without it, everything stays in this browser.</div>
 
       {cloud.status === 'unconfigured' ? (
         <>
@@ -41,7 +43,9 @@ export function CloudCard({ cloud }: { cloud: CloudApi }) {
         </>
       ) : (
         <>
-          <button className="btn" onClick={cloud.signIn}>Sign in with Google</button>
+          <Field label="Your email" full><input className="input" type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => { setEmail(e.target.value); setSent(false); }} placeholder="you@example.com" /></Field>
+          <button className="btn" disabled={!/^\S+@\S+\.\S+$/.test(email.trim())} onClick={async () => setSent(await cloud.sendLink(email))}>Email me a sign-in link</button>
+          {sent && <div className="notice" role="status">Link sent. Open it on this device (check spam too) and you will be signed in.</div>}
           <button className="btn secondary small" onClick={() => { cloud.configure(null); setErr(null); }}>Change Supabase project</button>
         </>
       )}

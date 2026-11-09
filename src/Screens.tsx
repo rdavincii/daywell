@@ -1111,10 +1111,10 @@ export function SettingsScreen({
       )}
 
       <div className="sub" style={{ textAlign: 'center', marginTop: 12 }}>
-        <strong>Version 1.7.1</strong>
+        <strong>Version 1.7.2</strong>
         <br />
         <span style={{ fontSize: 12 }}>
-          <em>What's new: optional Google sign-in (cloud save), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
+          <em>What's new: optional email sign-in for cloud save (no password), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
         </span>
         <br />
         <br />
