@@ -1,3 +1,4 @@
+import { saveFile } from './save';
 import type { AppState, Expense, Meal, WeightLog, FoodRef } from './types';
 import { sanitize } from './store';
 
@@ -58,12 +59,6 @@ export function mergeStates(local: AppState, remote: Partial<AppState>): AppStat
   };
 }
 
-export function exportBackupJSON(state: AppState): void {
-  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(state, null, 2));
-  const a = document.createElement('a');
-  a.setAttribute('href', dataStr);
-  a.setAttribute('download', `daywell-backup-${new Date().toISOString().slice(0, 10)}.json`);
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+export function exportBackupJSON(state: AppState) {
+  return saveFile(`daywell-backup-${new Date().toISOString().slice(0, 10)}.json`, JSON.stringify(state, null, 2), 'application/json');
 }

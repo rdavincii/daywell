@@ -1,4 +1,4 @@
-import { monotonePath } from './lib/chart';
+import { TrendChart, HistoryList } from './Trend';
 import { useState, useEffect } from 'react';
 import { EntryRow, buildEntries } from './Timeline';
 import type { Entry } from './Timeline';
@@ -12,6 +12,7 @@ import {
   nutritionOnDay,
   spendInRange,
   spendOnDay,
+  spendSeries,
   topFoods,
   weekRange,
   calculateSavings,
@@ -24,6 +25,7 @@ import { getKey, setKey } from './lib/keys';
 import { CloudCard } from './CloudCard';
 import type { CloudApi } from './useCloud';
 import { exportBackupJSON, mergeStates } from './lib/sync';
+import { saveFile } from './lib/save';
 import { CATEGORIES, MEAL_TYPES } from './lib/types';
 import type { AppState, Category, Settings, WeightGoal } from './lib/types';
 import { Field, ProgressBar, Ring, Icons, Segmented } from './ui';
@@ -293,7 +295,6 @@ export function HealthScreen({ state, today, onLogWeight }: { state: AppState; t
   })).filter((x) => x.count > 0);
 
   const [graphPeriod, setGraphPeriod] = useState<'weekly' | 'monthly'>('weekly');
-  const [hoveredNode, setHoveredNode] = useState<{x: number, y: number, date: string, weight: number} | null>(null);
 
   const macro = (label: string, v: number, t: number) => (
     <div className="stack" key={label} style={{ gap: 4 }}>
@@ -315,107 +316,11 @@ export function HealthScreen({ state, today, onLogWeight }: { state: AppState; t
     return 'Looking balanced today! 🥗';
   };
 
-  const AppleHealthWeightChart = () => {
-    const allLogs = state.weightLogs || [];
-    const windowDays = graphPeriod === 'weekly' ? 7 : 30;
-    const cutoff = Date.now() - windowDays * 86400000;
-    const logs = allLogs.filter((l) => l.ts >= cutoff);
-
-    if (logs.length === 0 && !s.currentWeightKg) {
-      return <div className="sub">No weight entries recorded in this window.</div>;
-    }
-
-    const effectiveLogs =
-      logs.length === 0 ? [{ ts: Date.now(), weightKg: s.currentWeightKg || 70 }] : logs;
-    const weights = effectiveLogs.map((l) => l.weightKg);
-    const avgWeight = weights.reduce((a, b) => a + b, 0) / weights.length;
-    const targetW = s.targetWeightKg;
-
-    const bounds = [...weights];
-    if (targetW) bounds.push(targetW);
-
-    const minW = Math.min(...bounds) - 1.5;
-    const maxW = Math.max(...bounds) + 1.5;
-    const dw = maxW - minW || 1;
-
-    const minT = effectiveLogs[0].ts;
-    const maxT = effectiveLogs[effectiveLogs.length - 1].ts;
-    const dt = Math.max(maxT - minT, 86400000);
-
-    // Fixed coordinate space scaled uniformly, so dots stay round and dashes keep their rhythm.
-    const W = 320, H = 140, PX = 10, PY = 12;
-    const X = (ts: number) => (effectiveLogs.length === 1 ? W / 2 : PX + ((ts - minT) / dt) * (W - 2 * PX));
-    const Y = (kg: number) => PY + (1 - (kg - minW) / dw) * (H - 2 * PY);
-    const nodes = effectiveLogs.map((l) => ({ x: X(l.ts), y: Y(l.weightKg), date: new Date(l.ts).toLocaleDateString(), weight: l.weightKg }));
-    const targetY = targetW ? Y(targetW) : null;
-    const avgY = Y(avgWeight);
-    const pin = (n: (typeof nodes)[0]) => setHoveredNode({ x: (n.x / W) * 100, y: (n.y / H) * 100, date: n.date, weight: n.weight });
-
-    return (
-      <div className="stack" style={{ gap: 8 }}>
-        <div className="row between">
-          <span className="sub">
-            Average: <strong>{avgWeight.toFixed(1)} kg</strong>
-          </span>
-          {targetW && (
-            <span className="sub">
-              Target: <strong>{targetW.toFixed(1)} kg</strong>
-            </span>
-          )}
-        </div>
-        <div style={{ aspectRatio: '320 / 140', position: 'relative', width: '100%' }} onMouseLeave={() => setHoveredNode(null)}>
-          <svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Weight over time" style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-            <line x1={PX} y1={avgY} x2={W - PX} y2={avgY} stroke="var(--green)" strokeWidth="1.5" strokeDasharray="5 4" />
-            {targetY !== null && (
-              <line x1={PX} y1={targetY} x2={W - PX} y2={targetY} stroke="var(--orange)" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" />
-            )}
-            <path d={monotonePath(nodes)} fill="none" stroke="var(--blue)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            {nodes.map((n, i) => (
-              <g key={i} onMouseEnter={() => pin(n)} onClick={() => pin(n)} style={{ cursor: 'pointer' }}>
-                <circle cx={n.x} cy={n.y} r="10" fill="transparent" />
-                <circle cx={n.x} cy={n.y} r="2.5" fill="var(--blue)" />
-              </g>
-            ))}
-          </svg>
-          
-          {hoveredNode && (
-            <div style={{
-               position: 'absolute',
-               left: `${hoveredNode.x}%`,
-               top: `${hoveredNode.y}%`,
-               transform: 'translate(-50%, -130%)',
-               background: 'var(--text)',
-               color: 'var(--bg)',
-               padding: '4px 8px',
-               borderRadius: '6px',
-               fontSize: '12px',
-               pointerEvents: 'none',
-               whiteSpace: 'nowrap',
-               zIndex: 10,
-               boxShadow: '0 2px 8px rgba(0,0,0,0.25)',
-               textAlign: 'center'
-            }}>
-              <strong>{hoveredNode.weight.toFixed(1)} kg</strong><br/>
-              <span style={{ opacity: 0.8, fontSize: '10px' }}>{hoveredNode.date}</span>
-            </div>
-          )}
-        </div>
-        <div className="chart-legend">
-          <span className="legend-item">
-            <span className="legend-line blue" /> Logged
-          </span>
-          <span className="legend-item">
-            <span className="legend-line green dashed" /> Average ({avgWeight.toFixed(1)} kg)
-          </span>
-          {targetW && (
-            <span className="legend-item">
-              <span className="legend-line orange dashed" /> Target ({targetW.toFixed(1)} kg)
-            </span>
-          )}
-        </div>
-      </div>
-    );
-  };
+  const windowDays = graphPeriod === 'weekly' ? 7 : 30;
+  const wLogs = (state.weightLogs || []).filter((l) => l.ts >= Date.now() - windowDays * 86400000);
+  const wAvg = wLogs.length ? wLogs.reduce((t, l) => t + l.weightKg, 0) / wLogs.length : undefined;
+  const wPoints = wLogs.map((l) => ({ ts: l.ts, value: l.weightKg, label: shortDay(dayKey(l.ts, s.timezone)) }));
+  const wRows = [...wLogs].reverse().map((l) => ({ key: String(l.ts), label: shortDay(dayKey(l.ts, s.timezone)), value: `${l.weightKg.toFixed(1)} kg` }));
 
   return (
     <div className="page">
@@ -455,7 +360,8 @@ export function HealthScreen({ state, today, onLogWeight }: { state: AppState; t
             onChange={(v) => setGraphPeriod(v)}
           />
         </div>
-        <AppleHealthWeightChart />
+        <TrendChart points={wPoints} format={(v) => `${v.toFixed(1)} kg`} ariaLabel="Weight over time" average={wAvg} reference={s.targetWeightKg} pad={1.5} />
+        <HistoryList rows={wRows} empty="No weight entries recorded in this period." />
       </div>
       
       <HomeWeightLog state={state} today={today} onLogWeight={onLogWeight} tz={s.timezone} />
@@ -517,6 +423,8 @@ export function HealthScreen({ state, today, onLogWeight }: { state: AppState; t
   );
 }
 
+const shortDay = (key: string) => new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short' }).format(new Date(key));
+
 function DonutChart({ cats, total }: { cats: { category: string; sen: number }[]; total: number }) {
   if (total === 0) return null;
   let acc = 0;
@@ -567,19 +475,47 @@ export function FinanceScreen({ state, today }: { state: AppState; today: string
   const catTotal = cats.reduce((t, c) => t + c.sen, 0);
   const savings = calculateSavings(state, today);
   const colors = ['#0a6cdc', '#1f9d4c', '#c25e00', '#d70015', '#5856d6', '#ff2d55', '#ff9f0a', '#34c759', '#8e8e93', '#af52de'];
+  const [period, setPeriod] = useState<'weekly' | 'monthly'>('weekly');
+  const series = spendSeries(state, today, period === 'weekly' ? 7 : 30);
+  const spendToday = spendOnDay(state, today);
+  const sAvg = series.reduce((t, x) => t + x.sen, 0) / series.length;
+  const points = series.map((x) => ({ ts: Date.parse(x.day), value: x.sen / 100, label: shortDay(x.day) }));
+  const rows = series.filter((x) => x.count > 0).reverse().map((x) => ({
+    key: x.day, label: shortDay(x.day), sub: `${x.count} item${x.count > 1 ? 's' : ''}`, value: formatRM(x.sen, cur),
+  }));
+  const left = b.dailyBudget - spendToday;
 
   return (
     <div className="page">
       <h1>Finance</h1>
-      <div className="grid2">
-        <div className="card stack">
+
+      <div className="notice" style={{ background: 'var(--green-soft)', color: 'var(--green)', fontWeight: 500 }}>
+        {b.dailyBudget <= 0 ? 'Set a daily budget in Settings to track it here.' : left < 0 ? 'Over today\'s budget. ⚠️' : spendToday === 0 ? 'Nothing spent yet today. 🌱' : 'Within today\'s budget. 👍'}
+      </div>
+
+      <div className="card row">
+        <Ring id="fin-today" value={spendToday} max={b.dailyBudget}>
+          <div className="big" style={{ fontSize: 20 }}>{formatRM(spendToday, '')}</div>
+          <div className="sub">today</div>
+        </Ring>
+        <div className="stack" style={{ gap: 4 }}>
           <span className="label">Today</span>
-          <div className="big">{formatRM(spendOnDay(state, today), cur)}</div>
+          {b.dailyBudget > 0 && (
+            <div className={left < 0 ? 'warn' : 'good'}>
+              <strong>{formatRM(Math.abs(left), cur)}</strong> <span className="sub">{left < 0 ? 'over budget' : 'remaining'}</span>
+            </div>
+          )}
+          <div className="sub">This week: {formatRM(spendInRange(state, wk.start, today), cur)}</div>
         </div>
-        <div className="card stack">
-          <span className="label">This week</span>
-          <div className="big">{formatRM(spendInRange(state, wk.start, today), cur)}</div>
+      </div>
+
+      <div className="card stack">
+        <div className="row between">
+          <span className="label">Spending History</span>
+          <Segmented label="Spending period" value={period} options={['weekly', 'monthly'] as const} onChange={(v) => setPeriod(v)} />
         </div>
+        <TrendChart points={points} format={(v) => formatRM(Math.round(v * 100), cur)} ariaLabel="Spending per day" average={sAvg / 100} reference={b.dailyBudget > 0 ? b.dailyBudget / 100 : null} referenceName="Daily budget" zeroBased />
+        <HistoryList rows={rows} empty="No spending recorded in this period." />
       </div>
 
       <div className="card row between" style={{ padding: '16px' }}>
@@ -738,15 +674,11 @@ export function SettingsScreen({
   const [syncStatus, setSyncStatus] = useState<string | null>(null);
 
 
-  function exportCSV() {
-    const blob = new Blob([toCSV(state)], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `daywell-export-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  async function save(run: () => ReturnType<typeof saveFile>, what: string) {
+    const r = await run();
+    setSyncStatus(r === 'shared' ? `${what} ready: choose "Save to Files" to keep it.` : r === 'downloaded' ? `${what} downloaded to your Downloads.` : r === 'cancelled' ? 'Export cancelled.' : `Could not export ${what.toLowerCase()}. Try again or use another browser.`);
   }
+  const exportCSV = () => save(() => saveFile(`daywell-export-${new Date().toISOString().slice(0, 10)}.csv`, toCSV(state), 'text/csv'), 'CSV');
 
   function handleFileImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -1049,7 +981,7 @@ export function SettingsScreen({
           <div className="sub">Export full backup or import a backup file from another device to sync progress without data loss.</div>
 
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <button className="btn secondary small" onClick={() => exportBackupJSON(state)}>
+            <button className="btn secondary small" onClick={() => save(() => exportBackupJSON(state), 'Backup')}>
               Export Full Backup (.json)
             </button>
             <label className="btn secondary small" style={{ margin: 0, cursor: 'pointer', textAlign: 'center' }}>
@@ -1091,10 +1023,10 @@ export function SettingsScreen({
       )}
 
       <div className="sub" style={{ textAlign: 'center', marginTop: 12 }}>
-        <strong>Version 1.7.3</strong>
+        <strong>Version 1.7.4</strong>
         <br />
         <span style={{ fontSize: 12 }}>
-          <em>What's new: optional encrypted cloud backup in your own GitHub Gist (no extra account), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
+          <em>What's new: Log box and Scan sit at the bottom within thumb reach, Export Backup now works on phones, Finance has a spending history with hover/touch dates, and Health and Finance share one layout.</em>
         </span>
         <br />
         <br />

@@ -181,3 +181,14 @@ export function calculateSuggestedTargetDate(currentKg: number, targetKg: number
   const weeks = Math.ceil(delta / 0.5);
   return addDays(todayStr, weeks * 7);
 }
+
+/** Spending per day for the last `n` days, oldest first. Days with nothing logged are a real 0 (you spent nothing). */
+export function spendSeries(s: AppState, today: string, n: number): { day: string; sen: number; count: number }[] {
+  const by = new Map<string, { sen: number; count: number }>();
+  for (const e of s.expenses) {
+    const k = dayKey(e.ts, s.settings.timezone);
+    const cur = by.get(k) ?? { sen: 0, count: 0 };
+    by.set(k, { sen: cur.sen + e.amountSen, count: cur.count + 1 });
+  }
+  return lastNDays(today, n).map((day) => ({ day, ...(by.get(day) ?? { sen: 0, count: 0 }) }));
+}

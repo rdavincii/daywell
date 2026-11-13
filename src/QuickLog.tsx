@@ -177,6 +177,7 @@ export function QuickLog({ now, tz, onCommit, lang = 'en-MY', suggestions = [], 
         >
           {listening ? Icons.stop : Icons.mic}
         </button>
+        <button type="button" className="icon-btn" onClick={() => setScanning(true)} aria-label="Scan">{Icons.camera}</button>
         <button type="submit" className="btn" disabled={!draftText.trim()}>Log</button>
       </form>
       {tail.length > 0 && (
@@ -196,7 +197,6 @@ export function QuickLog({ now, tz, onCommit, lang = 'en-MY', suggestions = [], 
             ))}
           </div>
         ) : <div />}
-        <button type="button" className="btn secondary small" style={{ flexShrink: 0 }} onClick={() => setScanning(true)}>Scan</button>
         <button
           type="button"
           className="btn secondary small"
