@@ -71,17 +71,14 @@ None today. Static hosting free tiers are enough. AI features, when added, will 
 - `src/*.test.ts(x)` tests
 
 
-## Cloud save (optional, email sign-in)
+## Cloud backup (optional, no server, no extra account)
 
-Daywell works fully offline in the browser. To keep a private copy in the cloud and use it on several devices, sign in with your email: Settings → Data → enter your email → open the link we send. No password and no third-party account.
+Daywell works fully offline in the browser. To keep a copy you can open on other devices: Settings → Data → create a GitHub token with **only the `gist` permission**, paste it, and choose a passphrase (use the same one on every device).
 
-One-time setup for the Supabase project in `.env.production` (already pre-connected on the deployed site):
-
-1. SQL editor: run `supabase/migrations/0003_user_state.sql` (one private row per user, protected by Row Level Security).
-2. Authentication → URL Configuration → **Redirect URLs**: add the address where Daywell is hosted (for example `https://rdavincii.github.io/daywell/`) so the email link brings you back to the app.
-3. Authentication → Providers: **Email** must be enabled (it is by default).
-
-The project URL and anon key in `.env.production` are public by design, protected by Row Level Security. Never put a service-role key there. Supabase's built-in email sender allows only a few emails per hour; that is plenty for sign-ins. Add your own SMTP in Supabase if you ever need more.
+- Your data is encrypted in the browser (AES-GCM, key from your passphrase) before it leaves the device, then stored in a secret GitHub Gist in your own account. A secret gist is unlisted, not private, which is why it is encrypted.
+- Lose the passphrase and the cloud copy cannot be read. Wrong passphrase never overwrites the copy.
+- The token and passphrase stay in this browser only. They are not in backups.
+- A delete on one device can come back from another device that has not synced yet.
 
 ## Food lookup keys (stored only in your browser)
 

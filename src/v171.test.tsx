@@ -6,8 +6,6 @@ import userEvent from '@testing-library/user-event';
 import { FOODS, convertQty, findFood, scaleByUnit, suggestFoods, unitOptions } from './lib/foods';
 import { parseEstimate } from './lib/vision';
 import { foodsToRemember } from './lib/myFoods';
-import { stateSig, syncOnce } from './lib/cloud';
-import { emptyState } from './lib/store';
 import { QuickLog } from './QuickLog';
 import type { Draft, FoodRef } from './lib/types';
 
@@ -81,38 +79,6 @@ describe('My foods', () => {
     expect(foodsToRemember([meal({ kcal: null })], [])).toEqual([]);
     expect(foodsToRemember([meal({ eaten: false })], [])).toEqual([]);
     expect(foodsToRemember([meal({}), meal({})], [])).toHaveLength(1);
-  });
-});
-
-describe('cloud sync', () => {
-  const fakeDb = (row: unknown, onUpsert = vi.fn()) => ({
-    from: () => ({
-      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }),
-      upsert: async (v: unknown) => { onUpsert(v); return { error: null }; },
-    }),
-  }) as never;
-  const withMeal = (id: string, kcal = 100) => ({ ...emptyState(), meals: [{ id, ts: 1, mealType: 'Lunch', foodName: 'a', servingLabel: 's', quantity: 1, portion: 'regular', kcal, proteinG: null, carbsG: null, fatG: null, nutritionSource: 'manual', confidence: 'high', source: 'manual' }] } as never);
-  it('merges cloud and local records and uploads the union', async () => {
-    const up = vi.fn();
-    const merged = await syncOnce(fakeDb({ state: withMeal('cloud') }, up), 'u', withMeal('local'), true);
-    expect(merged.meals.map((m) => m.id).sort()).toEqual(['cloud', 'local']);
-    expect(up.mock.calls[0][0]).toMatchObject({ user_id: 'u' });
-  });
-  it('first sync: cloud settings win; later syncs: this device wins', async () => {
-    const remote = { ...emptyState(), settings: { ...emptyState().settings, kcalTarget: 1800 } };
-    const local = { ...emptyState(), settings: { ...emptyState().settings, kcalTarget: 2500 } };
-    expect((await syncOnce(fakeDb({ state: remote }), 'u', local, true)).settings.kcalTarget).toBe(1800);
-    expect((await syncOnce(fakeDb({ state: remote }), 'u', local, false)).settings.kcalTarget).toBe(2500);
-  });
-  it('an empty cloud just uploads local; a failing cloud throws', async () => {
-    const up = vi.fn();
-    expect((await syncOnce(fakeDb(null, up), 'u', withMeal('a'), true)).meals).toHaveLength(1);
-    expect(up).toHaveBeenCalled();
-    const bad = { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: new Error('rls') }) }) }) }) } as never;
-    await expect(syncOnce(bad, 'u', withMeal('a'), true)).rejects.toThrow('rls');
-  });
-  it('signature ignores order but notices additions', () => {
-    expect(stateSig(withMeal('a'))).not.toBe(stateSig(emptyState()));
   });
 });
 

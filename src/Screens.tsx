@@ -1065,26 +1065,6 @@ export function SettingsScreen({
           {syncStatus && <div className="notice">{syncStatus}</div>}
 
           <div className="divider" style={{ margin: '12px 0' }} />
-          <span className="label">Cloud Database Sync (Supabase)</span>
-          <div className="sub">Optional: Connect your free Supabase database (`0001_init.sql`) to automatically sync in real-time.</div>
-          <Field label="Supabase Project URL" full>
-            <input
-              className="input"
-              value={s.supabaseUrl || ''}
-              onChange={(e) => onChange({ supabaseUrl: e.target.value.trim() })}
-              placeholder="https://xyzcompany.supabase.co"
-            />
-          </Field>
-          <Field label="Supabase Anon Key" full>
-            <input
-              className="input"
-              value={s.supabaseAnonKey || ''}
-              onChange={(e) => onChange({ supabaseAnonKey: e.target.value.trim() })}
-              placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."
-            />
-          </Field>
-
-          <div className="divider" style={{ margin: '12px 0' }} />
           <span className="label">Reset Data</span>
           {!confirm ? (
             <button className="btn danger" onClick={() => setConfirm(true)}>
@@ -1111,10 +1091,10 @@ export function SettingsScreen({
       )}
 
       <div className="sub" style={{ textAlign: 'center', marginTop: 12 }}>
-        <strong>Version 1.7.2</strong>
+        <strong>Version 1.7.3</strong>
         <br />
         <span style={{ fontSize: 12 }}>
-          <em>What's new: optional email sign-in for cloud save (no password), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
+          <em>What's new: optional encrypted cloud backup in your own GitHub Gist (no extra account), unit picker (g, oz, piece), 50+ more Malaysian foods, AI estimate for unknown dishes, and My foods.</em>
         </span>
         <br />
         <br />

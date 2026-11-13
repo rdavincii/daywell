@@ -1,52 +1,47 @@
 import { useState } from 'react';
-import { cloudConfig } from './lib/cloud';
 import type { CloudApi } from './useCloud';
 import { Field } from './ui';
 
-/** Settings → Data: optional email sign-in (a link sent to your inbox, no password) that keeps a private copy of your data in your own Supabase project. */
+/** Settings → Data: optional encrypted backup in your own GitHub Gist. No server, no extra sign-up. */
 export function CloudCard({ cloud }: { cloud: CloudApi }) {
-  const existing = cloudConfig();
-  const [url, setUrl] = useState(existing?.url ?? '');
-  const [anon, setAnon] = useState(existing?.anon ?? '');
-  const [err, setErr] = useState<string | null>(null);
+  const [token, setToken] = useState('');
+  const [pass, setPass] = useState('');
+  const [busy, setBusy] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const on = cloud.status !== 'off';
   const ago = cloud.lastSynced ? new Date(cloud.lastSynced).toLocaleTimeString() : null;
 
   return (
     <div className="card stack">
       <span className="label">Save to the cloud (optional)</span>
-      <div className="sub">Sign in with just your email (we send a link, no password) to keep a private backup and use Daywell on other devices. Without it, everything stays in this browser.</div>
+      <div className="sub">Keeps an encrypted copy of your data in a secret GitHub Gist that you own, so you can use Daywell on other devices. Nothing is sent anywhere else. Without it, everything stays in this browser.</div>
 
-      {cloud.status === 'unconfigured' ? (
+      {!on ? (
         <>
-          <div className="sub">One-time setup: paste your Supabase project details (free at supabase.com). Steps are in the README under “Cloud save”.</div>
-          <Field label="Supabase project URL" full><input className="input" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://xxxx.supabase.co" autoComplete="off" /></Field>
-          <Field label="Supabase anon / publishable key" full><input className="input" value={anon} onChange={(e) => setAnon(e.target.value)} placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." autoComplete="off" /></Field>
-          <button className="btn secondary small" onClick={() => setErr(cloud.configure({ url, anon }))}>Save connection</button>
-          {err && <div className="notice err" role="alert">{err}</div>}
-        </>
-      ) : cloud.email ? (
-        <>
-          <div className="row between"><span>Signed in as <strong>{cloud.email}</strong></span><button className="btn secondary small" onClick={cloud.signOut}>Sign out</button></div>
-          <div className="sub" role="status">
-            {cloud.status === 'syncing' ? 'Syncing…' : cloud.status === 'synced' ? `Saved to the cloud${ago ? ' at ' + ago : ''}.` : 'Not synced yet.'}
-          </div>
-          <div className="row">
-            <button className="btn small" onClick={cloud.syncNow} disabled={cloud.status === 'syncing'}>Sync now</button>
-            {!confirmDelete
-              ? <button className="btn danger small" onClick={() => setConfirmDelete(true)}>Delete my cloud copy</button>
-              : <button className="btn danger small" onClick={() => { void cloud.deleteCopy(); setConfirmDelete(false); }}>Really delete cloud copy</button>}
-          </div>
-          {confirmDelete && <div className="sub">This removes the copy in the cloud only. Data on this device stays, and you are signed out so it is not uploaded again.</div>}
+          <ol className="sub" style={{ paddingLeft: 18, margin: 0 }}>
+            <li><a href="https://github.com/settings/tokens/new?scopes=gist&description=Daywell%20backup" target="_blank" rel="noreferrer">Create a GitHub token</a> with only the <strong>gist</strong> permission and copy it.</li>
+            <li>Paste it below and choose a passphrase. Use the same passphrase on every device. If you forget it, the cloud copy cannot be read.</li>
+          </ol>
+          <Field label="GitHub token" full><input className="input" type="password" autoComplete="off" value={token} onChange={(e) => setToken(e.target.value)} placeholder="ghp_…" /></Field>
+          <Field label="Passphrase (8+ characters)" full><input className="input" type="password" autoComplete="off" value={pass} onChange={(e) => setPass(e.target.value)} /></Field>
+          <button className="btn" disabled={busy || token.trim().length < 20 || pass.length < 8}
+            onClick={async () => { setBusy(true); await cloud.connect(token, pass); setBusy(false); }}>
+            {busy ? 'Connecting…' : 'Connect and sync'}
+          </button>
         </>
       ) : (
         <>
-          <Field label="Your email" full><input className="input" type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => { setEmail(e.target.value); setSent(false); }} placeholder="you@example.com" /></Field>
-          <button className="btn" disabled={!/^\S+@\S+\.\S+$/.test(email.trim())} onClick={async () => setSent(await cloud.sendLink(email))}>Email me a sign-in link</button>
-          {sent && <div className="notice" role="status">Link sent. Open it on this device (check spam too) and you will be signed in.</div>}
-          <button className="btn secondary small" onClick={() => { cloud.configure(null); setErr(null); }}>Change Supabase project</button>
+          <div className="sub" role="status">
+            {cloud.status === 'syncing' ? 'Syncing…' : cloud.status === 'synced' ? `Saved to the cloud${ago ? ' at ' + ago : ''}.` : 'Not synced.'}
+          </div>
+          <div className="row">
+            <button className="btn small" onClick={cloud.syncNow} disabled={cloud.status === 'syncing'}>Sync now</button>
+            <button className="btn secondary small" onClick={cloud.disconnect}>Disconnect</button>
+            {!confirmDelete
+              ? <button className="btn danger small" onClick={() => setConfirmDelete(true)}>Delete cloud copy</button>
+              : <button className="btn danger small" onClick={() => { void cloud.deleteCopy(); setConfirmDelete(false); }}>Really delete</button>}
+          </div>
+          {confirmDelete && <div className="sub">Deletes the gist on GitHub and disconnects. Data on this device stays.</div>}
         </>
       )}
       {cloud.error && <div className="notice err" role="alert">{cloud.error}</div>}
