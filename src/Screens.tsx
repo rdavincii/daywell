@@ -1023,10 +1023,10 @@ export function SettingsScreen({
       )}
 
       <div className="sub" style={{ textAlign: 'center', marginTop: 12 }}>
-        <strong>Version 1.7.4</strong>
+        <strong>Version 1.7.5</strong>
         <br />
         <span style={{ fontSize: 12 }}>
-          <em>What's new: Log box and Scan sit at the bottom within thumb reach, Export Backup now works on phones, Finance has a spending history with hover/touch dates, and Health and Finance share one layout.</em>
+          <em>What's new: install Daywell to your home screen (works offline), a new app icon, and Scan can now pick meal or barcode photos from your gallery.</em>
         </span>
         <br />
         <br />

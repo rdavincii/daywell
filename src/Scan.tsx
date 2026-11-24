@@ -14,6 +14,8 @@ export function ScanSheet({ now, tz, customFoods, text = '', onDrafts, onClose }
   const [code, setCode] = useState(/^\d{8,14}$/.test(text.replace(/\s/g, '')) ? text.replace(/\s/g, '') : '');
   const barRef = useRef<HTMLInputElement>(null);
   const mealRef = useRef<HTMLInputElement>(null);
+  const mealPickRef = useRef<HTMLInputElement>(null); // no `capture`, so phones open the photo gallery
+  const barPickRef = useRef<HTMLInputElement>(null);
 
   async function byCode(c: string) {
     setBusy('Looking up barcode…'); setMsg(null);
@@ -71,8 +73,16 @@ export function ScanSheet({ now, tz, customFoods, text = '', onDrafts, onClose }
       <div className="stack">
         <input ref={barRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { barcodePhoto(e.target.files?.[0]); e.target.value = ''; }} />
         <input ref={mealRef} type="file" accept="image/*" capture="environment" hidden onChange={(e) => { mealPhoto(e.target.files?.[0]); e.target.value = ''; }} />
-        <button className="btn" disabled={!!busy} onClick={() => barRef.current?.click()}>Scan a barcode</button>
-        <button className="btn" disabled={!!busy} onClick={() => mealRef.current?.click()}>Scan a meal</button>
+        <input ref={barPickRef} type="file" accept="image/*" hidden aria-label="Barcode photo from gallery" onChange={(e) => { barcodePhoto(e.target.files?.[0]); e.target.value = ''; }} />
+        <input ref={mealPickRef} type="file" accept="image/*" hidden aria-label="Meal photo from gallery" onChange={(e) => { mealPhoto(e.target.files?.[0]); e.target.value = ''; }} />
+        <div className="row">
+          <button className="btn" style={{ flex: 1 }} disabled={!!busy} onClick={() => mealRef.current?.click()}>Scan a meal</button>
+          <button className="btn secondary" disabled={!!busy} onClick={() => mealPickRef.current?.click()}>From gallery</button>
+        </div>
+        <div className="row">
+          <button className="btn" style={{ flex: 1 }} disabled={!!busy} onClick={() => barRef.current?.click()}>Scan a barcode</button>
+          <button className="btn secondary" disabled={!!busy} onClick={() => barPickRef.current?.click()}>From gallery</button>
+        </div>
         {name && <button className="btn secondary" disabled={!!busy} onClick={byName}>Find macros for “{name}”</button>}
         <div className="row">
           <input className="input" inputMode="numeric" aria-label="Barcode number" placeholder="or type the barcode number" value={code} onChange={(e) => setCode(e.target.value)} />
@@ -80,7 +90,7 @@ export function ScanSheet({ now, tz, customFoods, text = '', onDrafts, onClose }
         </div>
         {busy && <div className="notice" role="status">{busy}</div>}
         {msg && <div className="notice warn" role="alert">{msg}</div>}
-        <div className="sub">Photos stay in your browser. Meal photos are sent to Google (your key) to name the foods; barcodes go to Open Food Facts and USDA.</div>
+        <div className="sub">Photos stay in your browser (camera or gallery). Meal photos are sent to Google (your key) to name the foods; barcodes go to Open Food Facts and USDA.</div>
       </div>
     </Sheet>
   );
